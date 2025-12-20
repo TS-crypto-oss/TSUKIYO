@@ -1,40 +1,3 @@
-// utils.js (helper functions)
-global.utils = {
-  getPrefix: (threadID) => "!", // Example prefix
-  getStreamFromURL: async (url) => {
-    const axios = require("axios");
-    return (await axios.get(url, { responseType: "arraybuffer" })).data;
-  },
-};
-
-// Sample commands map
-global.GoatBot = {
-  commands: new Map(),
-  aliases: new Map(),
-};
-
-// Example command for testing
-const testCommand = {
-  config: {
-    name: "ping",
-    aliases: ["p"],
-    category: "general",
-    role: 0,
-    version: "1.0",
-    guide: { en: "{he}ping" },
-    shortDescription: { en: "Check bot response" },
-    longDescription: { en: "Sends a pong message to check bot response." },
-  },
-  onStart: async function ({ message }) {
-    await message.reply("Pong!");
-  },
-};
-
-// Add test command to global commands
-global.GoatBot.commands.set("ping", testCommand);
-global.GoatBot.aliases.set("p", "ping");
-
-// Help command
 const { getPrefix } = global.utils;
 const { commands, aliases } = global.GoatBot;
 
@@ -42,90 +5,54 @@ module.exports = {
   config: {
     name: "help",
     version: "1.18",
-    author: "Ktkhang | modified Sanjida Snigdha",
+    author: "NTKhang | modified Sanjida Snigdha",
     countDown: 5,
     role: 0,
-    shortDescription: { en: "View command usage and list all commands directly" },
-    longDescription: { en: "View command usage and list all commands directly" },
+    shortDescription: { en: "View command list" },
     category: "info",
-    guide: { en: "help <command>" },
-    priority: 1,
+    guide: { en: "help <command>" }
   },
 
   onStart: async function ({ message, args, event, role }) {
-    const { threadID } = event;
-    const prefix = getPrefix(threadID);
-    const helpImage = "https://i.imgur.com/8XIHCo9.jpeg";
+    const prefix = getPrefix(event.threadID);
+    const img = "https://i.imgur.com/8XIHCo9.jpeg";
 
     if (!args[0]) {
-      const categories = {};
       let msg = "";
 
-      for (const [name, value] of commands) {
-        if (value.config.role > 1 && role < value.config.role) continue;
-        const category = value.config.category || "Uncategorized";
-        categories[category] = categories[category] || { commands: [] };
-        categories[category].commands.push(name);
+      for (const [name, cmd] of commands) {
+        if (cmd.config.role > role) continue;
+        msg += `• ${name}\n`;
       }
 
-      Object.keys(categories).sort().forEach((category) => {
-        if (category !== "info") {
-          msg += `\n╭─────⭓ ${category.toUpperCase()}`;
-          const names = categories[category].commands.sort();
-          for (let i = 0; i < names.length; i += 2) {
-            const cmds = names.slice(i, i + 2).map((item) => `✧${item}`);
-            msg += `\n│ ${cmds.join("   ")}`;
-          }
-          msg += `\n╰────────────⭓\n`;
-        }
-      });
-
-      msg += `\n⭔ Bot has ${commands.size} commands`;
-      msg += `\n⭔ Type ${prefix}help <command name> to see usage`;
-      msg += `\n╭─✦ ADMIN: Sanjida Snigdha\n├‣ FACEBOOK\n╰‣ m.me/sanjidasnigdha`;
-
       const sent = await message.reply({
-        body: msg,
-        attachment: await global.utils.getStreamFromURL(helpImage),
+        body:
+          `📌 Prefix: ${prefix}\n\n` +
+          msg +
+          `\nTotal commands: ${commands.size}`,
+        attachment: await global.utils.getStreamFromURL(img)
       });
 
-      setTimeout(() => message.unsend(sent.messageID), 80000);
+      setTimeout(() => message.unsend(sent.messageID), 60000);
     } else {
-      const commandName = args[0].toLowerCase();
-      const command =
-        commands.get(commandName) || commands.get(aliases.get(commandName));
+      const name = args[0].toLowerCase();
+      const cmd = commands.get(name) || commands.get(aliases.get(name));
+      if (!cmd) return message.reply("Command not found");
 
-      if (!command) return message.reply(`Command "${commandName}" not found.`);
-
-      const c = command.config;
-      const roleText = roleTextToString(c.role);
-      const usage = (c.guide?.en || "No guide").replace(/{he}/g, prefix).replace(/{lp}/g, c.name);
-
-      const res = `╭─────────⭓
-│ 🎀 NAME: ${c.name}
-│ 📃 Aliases: ${c.aliases ? c.aliases.join(", ") : "None"}
-├──‣ INFO
-│ 📝 Description: ${c.longDescription?.en || "No description"}
-│ 👑 Admin: Sanjida Snigdha
-│ 📚 Guide: ${usage}
-├──‣ Usage
-│ ⭐ Version: ${c.version || "1.0"}
-│ ♻️ Role: ${roleText}
-╰────────────⭓`;
+      const c = cmd.config;
+      const usage = (c.guide?.en || "")
+        .replace(/{he}/g, prefix)
+        .replace(/{lp}/g, c.name);
 
       const sent = await message.reply({
-        body: res,
-        attachment: await global.utils.getStreamFromURL(helpImage),
+        body:
+          `📛 Name: ${c.name}\n` +
+          `📃 Description: ${c.longDescription?.en || "N/A"}\n` +
+          `📚 Guide: ${usage}`,
+        attachment: await global.utils.getStreamFromURL(img)
       });
 
-      setTimeout(() => message.unsend(sent.messageID), 80000);
+      setTimeout(() => message.unsend(sent.messageID), 60000);
     }
-  },
+  }
 };
-
-function roleTextToString(role) {
-  if (role === 0) return "0 (All users)";
-  if (role === 1) return "1 (Group admins)";
-  if (role === 2) return "2 (Bot admin)";
-  return "Unknown";
-}
