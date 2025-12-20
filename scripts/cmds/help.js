@@ -4,55 +4,130 @@ const { commands, aliases } = global.GoatBot;
 module.exports = {
   config: {
     name: "help",
-    version: "1.18",
-    author: "NTKhang | modified Sanjida Snigdha",
+    version: "1.19",
+    author: "Ktkhang | fixed & modified by Sanjida Snigdha",
     countDown: 5,
     role: 0,
-    shortDescription: { en: "View command list" },
+    shortDescription: {
+      en: "View command list and usage"
+    },
+    longDescription: {
+      en: "View all commands or detailed usage of a specific command"
+    },
     category: "info",
-    guide: { en: "help <command>" }
+    guide: {
+      en: "{pn}help [command name]"
+    },
+    priority: 1
   },
 
   onStart: async function ({ message, args, event, role }) {
-    const prefix = getPrefix(event.threadID);
-    const img = "https://i.imgur.com/8XIHCo9.jpeg";
+    const { threadID } = event;
+    const prefix = getPrefix(threadID);
 
+    // ================== ALL COMMAND LIST ==================
     if (!args[0]) {
+      const categories = {};
+      let visibleCount = 0;
       let msg = "";
 
       for (const [name, cmd] of commands) {
         if (cmd.config.role > role) continue;
-        msg += `• ${name}\n`;
+
+        const category = cmd.config.category || "uncategorized";
+        if (!categories[category]) categories[category] = [];
+        categories[category].push(name);
+        visibleCount++;
       }
 
+      Object.keys(categories)
+        .sort((a, b) => a.localeCompare(b))
+        .forEach(category => {
+          msg += `\n╭─────⭓ ${category.toUpperCase()}`;
+
+          const names = categories[category]
+            .sort((a, b) => a.localeCompare(b));
+
+          for (let i = 0; i < names.length; i += 2) {
+            const row = names.slice(i, i + 2).map(n => `✧${n}`);
+            msg += `\n│ ${row.join("   ")}`;
+          }
+
+          msg += `\n╰────────────⭓`;
+        });
+
+      msg += `\n\n⭔ Available commands: ${visibleCount}`;
+      msg += `\n⭔ Use: ${prefix}help <command name>`;
+      msg += `\n\n╭─✦ BOT ADMIN\n╰‣ Sanjida Snigdha`;
+
       const sent = await message.reply({
-        body:
-          `📌 Prefix: ${prefix}\n\n` +
-          msg +
-          `\nTotal commands: ${commands.size}`,
-        attachment: await global.utils.getStreamFromURL(img)
+        body: msg,
+        attachment: await global.utils.getStreamFromURL(
+          "https://files.catbox.moe/xe8ps0.jpg"
+        )
       });
 
-      setTimeout(() => message.unsend(sent.messageID), 60000);
-    } else {
-      const name = args[0].toLowerCase();
-      const cmd = commands.get(name) || commands.get(aliases.get(name));
-      if (!cmd) return message.reply("Command not found");
+      setTimeout(() => {
+        message.unsend(sent.messageID).catch(() => {});
+      }, 80000);
 
-      const c = cmd.config;
-      const usage = (c.guide?.en || "")
-        .replace(/{he}/g, prefix)
-        .replace(/{lp}/g, c.name);
-
-      const sent = await message.reply({
-        body:
-          `📛 Name: ${c.name}\n` +
-          `📃 Description: ${c.longDescription?.en || "N/A"}\n` +
-          `📚 Guide: ${usage}`,
-        attachment: await global.utils.getStreamFromURL(img)
-      });
-
-      setTimeout(() => message.unsend(sent.messageID), 60000);
+      return;
     }
+
+    // ================== SINGLE COMMAND INFO ==================
+    const input = args[0].toLowerCase();
+    const realName = commands.has(input)
+      ? input
+      : aliases.get(input);
+
+    const command = commands.get(realName);
+    if (!command) {
+      return message.reply(`❌ Command "${input}" not found.`);
+    }
+
+    const c = command.config;
+
+    // resolve aliases correctly
+    const aliasList = [];
+    for (const [a, cmdName] of aliases) {
+      if (cmdName === c.name) aliasList.push(a);
+    }
+
+    const guide = (c.guide?.en || "No guide available")
+      .replace(/{pn}/g, prefix)
+      .replace(/{cmd}/g, c.name);
+
+    const res = `╭─────────⭓
+│ 🎀 NAME: ${c.name}
+│ 📃 Aliases: ${aliasList.length ? aliasList.join(", ") : "None"}
+├──‣ INFO
+│ 📝 Description: ${c.longDescription?.en || "No description"}
+│ 📚 Guide: ${guide}
+├──‣ SYSTEM
+│ ⭐ Version: ${c.version || "1.0"}
+│ ♻️ Role: ${roleToText(c.role)}
+│ 📂 Category: ${c.category || "Uncategorized"}
+╰────────────⭓`;
+
+    const sent = await message.reply({
+      body: res,
+      attachment: await global.utils.getStreamFromURL(
+        "https://files.catbox.moe/xe8ps0.jpg"
+      )
+    });
+
+    setTimeout(() => {
+      message.unsend(sent.messageID).catch(() => {});
+    }, 80000);
   }
 };
+
+// ================== ROLE TEXT ==================
+function roleToText(role) {
+  switch (role) {
+    case 0: return "0 (All users)";
+    case 1: return "1 (Group admin)";
+    case 2: return "2 (Bot admin)";
+    default: return `${role} (Custom role)`;
+  }
+}
