@@ -1,10 +1,10 @@
-const { getPrefix } = global.utils;
+const { getPrefix, getStreamFromURL } = global.utils;
 const { commands, aliases } = global.GoatBot;
 
 module.exports = {
   config: {
     name: "help",
-    version: "1.19",
+    version: "1.20",
     author: "Ktkhang | fixed & modified by Sanjida Snigdha",
     countDown: 5,
     role: 0,
@@ -21,11 +21,21 @@ module.exports = {
     priority: 1
   },
 
-  onStart: async function ({ message, args, event, role }) {
+  onStart: async function ({ message, args, event, role, api }) {
     const { threadID } = event;
     const prefix = getPrefix(threadID);
 
-    // ================== ALL COMMAND LIST ==================
+    // ================= IMAGE SAFE LOAD =================
+    let img = null;
+    try {
+      img = await getStreamFromURL(
+        "https://i.ibb.co/2Y1pyyW8/image0.jpg"
+      );
+    } catch (e) {
+      img = null;
+    }
+
+    // ================= ALL COMMAND LIST =================
     if (!args[0]) {
       const categories = {};
       let visibleCount = 0;
@@ -62,23 +72,24 @@ module.exports = {
 
       const sent = await message.reply({
         body: msg,
-        attachment: await global.utils.getStreamFromURL(
-          "https://files.catbox.moe/xe8ps0.jpg"
-        )
+        attachment: img
       });
 
       setTimeout(() => {
-        message.unsend(sent.messageID).catch(() => {});
+        if (message.unsend)
+          message.unsend(sent.messageID).catch(() => {});
+        else
+          api.unsendMessage(sent.messageID);
       }, 80000);
 
       return;
     }
 
-    // ================== SINGLE COMMAND INFO ==================
+    // ================= SINGLE COMMAND INFO =================
     const input = args[0].toLowerCase();
     const realName = commands.has(input)
       ? input
-      : aliases.get(input);
+      : aliases?.get(input);
 
     const command = commands.get(realName);
     if (!command) {
@@ -87,10 +98,12 @@ module.exports = {
 
     const c = command.config;
 
-    // resolve aliases correctly
+    // resolve aliases safely
     const aliasList = [];
-    for (const [a, cmdName] of aliases) {
-      if (cmdName === c.name) aliasList.push(a);
+    if (aliases && aliases instanceof Map) {
+      for (const [a, cmdName] of aliases) {
+        if (cmdName === c.name) aliasList.push(a);
+      }
     }
 
     const guide = (c.guide?.en || "No guide available")
@@ -111,18 +124,19 @@ module.exports = {
 
     const sent = await message.reply({
       body: res,
-      attachment: await global.utils.getStreamFromURL(
-        "https://files.catbox.moe/xe8ps0.jpg"
-      )
+      attachment: img
     });
 
     setTimeout(() => {
-      message.unsend(sent.messageID).catch(() => {});
+      if (message.unsend)
+        message.unsend(sent.messageID).catch(() => {});
+      else
+        api.unsendMessage(sent.messageID);
     }, 80000);
   }
 };
 
-// ================== ROLE TEXT ==================
+// ================= ROLE TEXT =================
 function roleToText(role) {
   switch (role) {
     case 0: return "0 (All users)";
