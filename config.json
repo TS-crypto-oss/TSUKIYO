@@ -6,7 +6,7 @@
   "baby": "https://nix-baby-apis.vercel.app",
   "nickNameBot": "NISHAT BABU😘",
   "database": {
-    "type": "sqlite",
+    "type": "mongodb",
     "uriMongodb": "mongodb+srv://Goatbot:gaming@cluster0.ukiiwk0.mongodb.net/?appName=Cluster0",
     "autoSyncWhenStart": false,
     "autoRefreshThreadInfoFirstTime": true
