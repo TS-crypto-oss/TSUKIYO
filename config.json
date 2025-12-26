@@ -7,7 +7,7 @@
   "nickNameBot": "NISHAT BABU😘",
   "database": {
     "type": "sqlite",
-    "uriMongodb": "",
+    "uriMongodb": "mongodb+srv://Goatbot:gaming@cluster0.ukiiwk0.mongodb.net/?appName=Cluster0",
     "autoSyncWhenStart": false,
     "autoRefreshThreadInfoFirstTime": true
   },
