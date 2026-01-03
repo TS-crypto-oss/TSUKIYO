@@ -33,7 +33,6 @@ module.exports = {
 
     let attachment = null;
     try {
-      // চেক করছি লিঙ্ক ঠিক আছে কি না
       if (videoURL && videoURL.startsWith("http")) {
         attachment = await getStreamFromURL(videoURL);
       }
@@ -48,14 +47,14 @@ module.exports = {
 
     const info = `
 ⫷          O᩶w᩶n᩶e᩶r᩶ I᩶n᩶f᩶o᩶          ⫸
-┃ ☁️ 𝗡𝗮𝗺𝗲:          Sanjida Snigdha 
-┃ ⚙️ 𝗕𝗼𝘁 𝗡𝗮𝗺𝗲:     💋♡your baby♡💌🦋 くめ
+┃ ☁️ 𝗡𝗮𝗺𝗲:          T̸s̸u̸k̸i̸y̸o̸
+┃ ⚙️ 𝗕𝗼𝘁 𝗡𝗮𝗺𝗲:     Your luccha xan
 ┃ 🎂 𝗔𝗴𝗲:            18
 ┃ 🧠 𝗖𝗹𝗮𝘀𝘀:          bolbo na 😒
 ┃ ❤️ 𝗥𝗲𝗹𝗮𝘁𝗶𝗼𝗻:      Single 
-┃ ♂️ 𝗚𝗲𝗻𝗱𝗲𝗿:        female 
+┃ ♂️ 𝗚𝗲𝗻𝗱𝗲𝗿:        male 
 ┃ 🏠 𝗙𝗿𝗼𝗺:          Sirajganj 
-┃ 💬 𝗠𝗲𝘀𝘀𝗲𝗻𝗴𝗲𝗿:     https://m.me/nx210.2.0.is.back
+┃ 💬 𝗠𝗲𝘀𝘀𝗲𝗻𝗴𝗲𝗿:     https://www.facebook.com/profile.php?id=61578183066330
 ♡ 𝐓𝐡𝐚𝐧𝐤𝐬 𝐟𝐨𝐫 𝐮𝐬𝐢𝐧𝐠 𝐦𝐲 𝐛𝐨𝐭 ♡
     `.trim();
 
