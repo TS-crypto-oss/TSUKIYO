@@ -11,46 +11,20 @@ module.exports = {
     description: "Change the bot prefix in your chat box or globally (admin only)",
     category: "⚙️ Configuration",
     guide: {
-      en:
-        "『 Prefix Settings 』\n"
-        + "│\n"
-        + "│ 🔹 {pn} <prefix>\n"
-        + "│     Set prefix for this chat\n"
-        + "│     Example: {pn} $\n"
-        + "│\n"
-        + "│ 🔹 {pn} <prefix> -g\n"
-        + "│     Set global prefix (Admin only)\n"
-        + "│     Example: {pn} $ -g\n"
-        + "│\n"
-        + "│ ♻️ {pn} reset\n"
-        + "│     Reset to default prefix\n"
+      en: "{pn} <prefix> | {pn} <prefix> -g | {pn} reset"
     }
   },
 
   langs: {
     en: {
-      reset:
-        "┌─『 Prefix Reset 』\n"
-        + "│ ✅ Reset to default: %1",
-      onlyAdmin:
-        "┌─『 Permission Denied 』\n"
-        + "│ ⛔ Only bot admins can change global prefix!",
-      confirmGlobal:
-        "┌─『 Global Prefix Change 』\n"
-        + "│ ⚙️ React to confirm global prefix update.",
-      confirmThisThread:
-        "┌─『 Chat Prefix Change 』\n"
-        + "│ ⚙️ React to confirm this chat's prefix update.",
-      successGlobal:
-        "┌─『 Prefix Updated 』\n"
-        + "│ ✅ Global prefix: %1",
-      successThisThread:
-        "┌─『 Prefix Updated 』\n"
-        + "│ ✅ Chat prefix: %1"
+      reset: "💠 ━━━『 **𝐏𝐑𝐄𝐅𝐈𝐗 𝐑𝐄𝐒𝐄𝐓** 』━━━ 💠\n│ 🔄 Default system prefix restored!\n│ ✅ New Prefix: %1",
+      onlyAdmin: "🚫 ━━━『 **𝐀𝐂𝐂𝐄𝐒𝐒 𝐃𝐄𝐍𝐈𝐄𝐃** 』━━━ 🚫\n│ ⛔ Only Bot Admins can modify the global prefix!",
+      confirmGlobal: "🔴 ━━━『 **𝐆𝐋𝐎𝐁𝐀𝐋 𝐂𝐎𝐍𝐅𝐈𝐑𝐌** 』━━━ 🔴\n│ ⚙️ React to confirm GLOBAL prefix update.",
+      confirmThisThread: "🟡 ━━━『 **𝐏𝐑𝐄𝐅𝐈𝐗 𝐂𝐎𝐍𝐅𝐈𝐑𝐌** 』━━━ 🟡\n│ 📥 React to confirm prefix update for this chat.",
+      successGlobal: "🟢 ━━━『 **𝐒𝐘𝐒𝐓𝐄𝐌 𝐔𝐏𝐃𝐀𝐓𝐄𝐃** 』━━━ 🟢\n│ ✅ Global prefix is now: %1",
+      successThisThread: "🔵 ━━━『 **𝐏𝐑𝐄𝐅𝐈𝐗 𝐔𝐏𝐃𝐀𝐓𝐄𝐃** 』━━━ 🔵\n│ 💬 Chat prefix changed to: %1"
     }
   },
-
-  // ───────────── Prefix Command ─────────────
 
   onStart: async function ({ message, role, args, commandName, event, threadsData, getLang }) {
     if (!args[0]) return message.SyntaxError();
@@ -68,13 +42,9 @@ module.exports = {
       setGlobal: args[1] === "-g"
     };
 
-    if (formSet.setGlobal && role < 2) {
-      return message.reply(getLang("onlyAdmin"));
-    }
+    if (formSet.setGlobal && role < 2) return message.reply(getLang("onlyAdmin"));
 
-    const confirmMessage = formSet.setGlobal
-      ? getLang("confirmGlobal")
-      : getLang("confirmThisThread");
+    const confirmMessage = formSet.setGlobal ? getLang("confirmGlobal") : getLang("confirmThisThread");
 
     return message.reply(confirmMessage, (err, info) => {
       formSet.messageID = info.messageID;
@@ -82,18 +52,13 @@ module.exports = {
     });
   },
 
-  // ───────────── Reaction Confirm ─────────────
-
   onReaction: async function ({ message, threadsData, event, Reaction, getLang }) {
     const { author, newPrefix, setGlobal } = Reaction;
     if (event.userID !== author) return;
 
     if (setGlobal) {
       global.GoatBot.config.prefix = newPrefix;
-      fs.writeFileSync(
-        global.client.dirConfig,
-        JSON.stringify(global.GoatBot.config, null, 2)
-      );
+      fs.writeFileSync(global.client.dirConfig, JSON.stringify(global.GoatBot.config, null, 2));
       return message.reply(getLang("successGlobal", newPrefix));
     }
 
@@ -101,24 +66,21 @@ module.exports = {
     return message.reply(getLang("successThisThread", newPrefix));
   },
 
-  // ───────────── Prefix Show (ONLY VIDEO) ─────────────
-
   onChat: async function ({ event, message, threadsData }) {
-    const globalPrefix = global.GoatBot.config.prefix;
-    const threadPrefix =
-      (await threadsData.get(event.threadID, "data.prefix")) || globalPrefix;
-
     if (event.body && event.body.toLowerCase() === "prefix") {
+      const globalPrefix = global.GoatBot.config.prefix;
+      const threadPrefix = (await threadsData.get(event.threadID, "data.prefix")) || globalPrefix;
+
       return message.reply({
-        body:
-          "╔══『 𝐏𝐑𝐄𝐅𝐈𝐗 』══╗\n"
-        + `║ 🌍 System : ${globalPrefix}\n`
-        + `║ 💬 Chatbox : ${threadPrefix}\n`
-        + `║ ➤ ${threadPrefix}help to see all cmds\n`
-        + "╚═══════════════╝",
-        attachment: await utils.getStreamFromURL(
-          "https://files.catbox.moe/gcadng.gif"
-        )
+        body: "╭━━━━━━━ ⚡ ━━━━━━━╮\n"
+            + "     ✨  **𝐁𝐎𝐓 𝐏𝐑𝐄𝐅𝐈𝐗 𝐈𝐍𝐅𝐎** ✨\n"
+            + "╰━━━━━━━ ⚡ ━━━━━━━╯\n"
+            + "🛰️ 𝐒𝐲𝐬𝐭𝐞𝐦   :  📡 [ " + globalPrefix + " ]\n"
+            + "🌌 𝐂𝐡𝐚𝐭𝐛𝐨𝐱  :  ☄️ [ " + threadPrefix + " ]\n"
+            + "━━━━━━━━━━━━━━━━━━━━\n"
+            + "💡 𝐓𝐢𝐩: Type `" + threadPrefix + "help` to see commands.\n"
+            + "👑 𝐎𝐰𝐧𝐞𝐫   : 🌀 『 T̸s̸u̸k̸i̸y̸o̸ 』 ✨",
+        attachment: await utils.getStreamFromURL("https://files.catbox.moe/gcadng.gif")
       });
     }
   }
